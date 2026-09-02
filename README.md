@@ -17,8 +17,8 @@ Aplicación web desarrollada con Flask y SQLite que permite gestionar el inventa
 
 ### 1. Clonar el repositorio
 ```bash
-git clone <https://github.com/Hatchedbot/ElFruver.git>
-cd <ElFruver>
+git clone https://github.com/Hatchedbot/ElFruver.git
+cd ElFruver
 ```
 
 ### 2. Crear entorno virtual
