@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Fruver — Pizarra de Precios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pizarra:     #1E3328;
+    --pizarra-dark:#172820;
+    --tiza:        #F4EFE2;
+    --tiza-soft:    #C9D3C6;
+    --mango:       #E8933F;
+    --tomate:      #D6503E;
+    --limon:       #9CC24A;
+    --madera:      #7C5A3A;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    background: radial-gradient(ellipse at top, #24402F 0%, var(--pizarra) 55%);
+    color:var(--tiza);
+    font-family:'Nunito', sans-serif;
+    min-height:100vh;
+    padding:36px 18px 90px;
+  }
+
+  .pizarra{
+    max-width:960px;
+    margin:0 auto;
+    border:10px solid var(--madera);
+    border-radius:6px;
+    background:var(--pizarra-dark);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+  }
+
+  .encabezado{
+    padding:30px 34px 20px;
+    border-bottom: 2px dashed var(--tiza-soft);
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  .encabezado h1{
+    font-family:'Caveat', cursive;
+    font-size:52px;
+    line-height:1;
+    margin:0;
+    font-weight:700;
+    color:var(--tiza);
+  }
+  .encabezado p{
+    margin:6px 0 0;
+    font-size:14px;
+    color:var(--tiza-soft);
+    max-width:44ch;
+  }
+  .estado{
+    font-size:13px;
+    font-weight:700;
+    padding:6px 12px;
+    border-radius:20px;
+    border:1px solid var(--tiza-soft);
+    white-space:nowrap;
+  }
+  .estado[data-ok="true"]{ border-color:var(--limon); color:var(--limon); }
+  .estado[data-ok="false"]{ border-color:var(--tomate); color:var(--tomate); }
+
+  .totales{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    padding:22px 34px 6px;
+  }
+  .totales div{
+    background:rgba(244,239,226,0.06);
+    border:1px solid var(--tiza-soft);
+    border-radius:8px;
+    padding:12px 14px;
+    text-align:center;
+  }
+  .totales .num{
+    font-family:'Caveat', cursive;
+    font-size:28px;
+    color:var(--mango);
+    line-height:1;
+  }
+  .totales .num.alerta{ color:var(--tomate); }
+  .totales .label{
+    font-size:11px;
+    color:var(--tiza-soft);
+    margin-top:4px;
+  }
+
+  .filtros{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    padding:18px 34px 0;
+  }
+  .filtros input[type="text"]{
+    flex:1;
+    min-width:160px;
+    font-family:'Nunito', sans-serif;
+    font-size:13px;
+    padding:8px 12px;
+    border-radius:16px;
+    border:1px solid var(--tiza-soft);
+    background:rgba(244,239,226,0.06);
+    color:var(--tiza);
+  }
+  .filtros input[type="text"]:focus{ outline:none; border-color:var(--mango); }
+  .chip{
+    font-family:'Nunito', sans-serif;
+    font-size:12px;
+    font-weight:700;
+    padding:7px 14px;
+    border-radius:16px;
+    border:1px solid var(--tiza-soft);
+    background:transparent;
+    color:var(--tiza-soft);
+    cursor:pointer;
+  }
+  .chip.activo{ background:var(--mango); border-color:var(--mango); color:var(--pizarra-dark); }
+
+  .puesto{ padding:18px 34px 30px; }
+
+  .fila{
+    display:grid;
+    grid-template-columns: 1.4fr 0.9fr 80px 0.9fr 90px auto;
+    gap:12px;
+    align-items:center;
+    padding:14px 0;
+    border-bottom:1px dashed var(--tiza-soft);
+  }
+  .fila.cabecera{
+    font-size:11px;
+    color:var(--tiza-soft);
+    border-bottom:2px solid var(--tiza-soft);
+    padding-bottom:8px;
+  }
+
+  .fila input.nombre,
+  .fila input.precio,
+  .fila input.stock{
+    width:100%;
+    font-family:'Nunito', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    background:transparent;
+    border:none;
+    border-bottom:1px solid transparent;
+    color:var(--tiza);
+    padding:2px 0;
+  }
+  .fila input.nombre:focus,
+  .fila input.precio:focus,
+  .fila input.stock:focus{ outline:none; border-bottom:1px solid var(--mango); }
+  .fila input.precio{ color:var(--mango); font-family:'Caveat', cursive; font-size:20px; }
+  .fila input.stock.bajo{ color:var(--tomate); }
+
+  .select-chico{
+    font-family:'Nunito', sans-serif;
+    font-size:12px;
+    font-weight:700;
+    background:rgba(244,239,226,0.08);
+    color:var(--tiza);
+    border:1px solid var(--tiza-soft);
+    border-radius:14px;
+    padding:5px 6px;
+    text-align:center;
+  }
+
+  .acciones{ display:flex; gap:6px; justify-content:flex-end; }
+  button{
+    font-family:'Nunito', sans-serif;
+    font-size:12px;
+    font-weight:700;
+    border-radius:14px;
+    border:1px solid var(--tiza-soft);
+    background:transparent;
+    color:var(--tiza);
+    padding:6px 12px;
+    cursor:pointer;
+  }
+  button.guardar{ border-color:var(--limon); color:var(--limon); }
+  button.guardar:hover{ background:var(--limon); color:var(--pizarra-dark); }
+  button.eliminar{ border-color:var(--tomate); color:var(--tomate); }
+  button.eliminar:hover{ background:var(--tomate); color:var(--pizarra-dark); }
+
+  .vacio{ text-align:center; color:var(--tiza-soft); padding:24px 0; }
+
+  .secciones{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+    margin-top:20px;
+    padding-top:18px;
+    border-top:2px dashed var(--tiza-soft);
+  }
+  .seccion h2{
+    font-family:'Caveat', cursive;
+    font-size:24px;
+    margin:0 0 12px;
+    color:var(--mango);
+    font-weight:700;
+  }
+  .seccion form{ display:flex; flex-direction:column; gap:10px; }
+  .seccion .fila-campos{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .seccion label{ display:block; font-size:11px; color:var(--tiza-soft); margin-bottom:4px; }
+  .seccion input, .seccion select{
+    width:100%;
+    font-family:'Nunito', sans-serif;
+    font-size:13px;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid var(--tiza-soft);
+    background:rgba(244,239,226,0.06);
+    color:var(--tiza);
+  }
+  .seccion input:focus, .seccion select:focus{ outline:none; border-color:var(--mango); }
+  .seccion button[type="submit"]{
+    background:var(--mango);
+    border-color:var(--mango);
+    color:var(--pizarra-dark);
+    padding:9px 14px;
+    align-self:flex-start;
+  }
+  .seccion button[type="submit"]:hover{ background:#c97a2e; border-color:#c97a2e; }
+  .seccion.venta button[type="submit"]{ background:var(--limon); border-color:var(--limon); }
+  .seccion.venta button[type="submit"]:hover{ background:#7fa73a; border-color:#7fa73a; }
+
+  .aviso{ font-size:12px; margin-top:4px; min-height:1.4em; }
+  .aviso.error{ color:var(--tomate); }
+  .aviso.ok{ color:var(--limon); }
+
+  @media (max-width:720px){
+    .totales{ grid-template-columns:1fr 1fr; }
+    .secciones{ grid-template-columns:1fr; }
+  }
+  @media (max-width:640px){
+    .encabezado h1{ font-size:40px; }
+    .fila{ grid-template-columns:1fr; }
+    .fila.cabecera{ display:none; }
+    .acciones{ justify-content:flex-start; margin-top:4px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="pizarra">
+    <div class="encabezado">
+      <div>
+        <h1>El Fruver de Hoy</h1>
+        <p>Precios, stock y ventas del puesto — todo actualizado en vivo contra la API.</p>
+      </div>
+      <div class="estado" id="estado" data-ok="false">verificando…</div>
+    </div>
+
+    <div class="totales">
+      <div>
+        <div class="num" id="total-items">—</div>
+        <div class="label">productos</div>
+      </div>
+      <div>
+        <div class="num" id="promedio">—</div>
+        <div class="label">precio promedio</div>
+      </div>
+      <div>
+        <div class="num" id="stock-total">—</div>
+        <div class="label">unidades en stock</div>
+      </div>
+      <div>
+        <div class="num alerta" id="stock-bajo-count">—</div>
+        <div class="label">con stock bajo</div>
+      </div>
+    </div>
+
+    <div class="filtros">
+      <input type="text" id="buscador" placeholder="Buscar producto…">
+      <button class="chip activo" data-categoria="">Todo</button>
+      <button class="chip" data-categoria="fruta">Frutas</button>
+      <button class="chip" data-categoria="verdura">Verduras</button>
+      <button class="chip" data-categoria="tuberculo">Tubérculos</button>
+      <button class="chip" data-categoria="hierba">Hierbas</button>
+    </div>
+
+    <div class="puesto">
+      <div class="fila cabecera">
+        <span>Producto</span>
+        <span>Precio</span>
+        <span>Unidad</span>
+        <span>Categoría</span>
+        <span>Stock</span>
+        <span></span>
+      </div>
+
+      <div id="lista-productos">
+        <div class="vacio">Cargando el puesto…</div>
+      </div>
+
+      <div class="secciones">
+        <div class="seccion alta">
+          <h2>Sumar producto al puesto</h2>
+          <form id="form-alta">
+            <div>
+              <label for="nombre-nuevo">Producto</label>
+              <input type="text" id="nombre-nuevo" placeholder="p. ej. Mango Tommy" required>
+            </div>
+            <div class="fila-campos">
+              <div>
+                <label for="precio-nuevo">Precio</label>
+                <input type="number" id="precio-nuevo" placeholder="0" min="0" step="any">
+              </div>
+              <div>
+                <label for="unidad-nueva">Unidad</label>
+                <select id="unidad-nueva">
+                  <option value="kg">kg</option>
+                  <option value="libra">libra</option>
+                  <option value="unidad">unidad</option>
+                  <option value="atado">atado</option>
+                </select>
+              </div>
+              <div>
+                <label for="categoria-nueva">Categoría</label>
+                <select id="categoria-nueva">
+                  <option value="fruta">fruta</option>
+                  <option value="verdura">verdura</option>
+                  <option value="tuberculo">tubérculo</option>
+                  <option value="hierba">hierba</option>
+                  <option value="otro">otro</option>
+                </select>
+              </div>
+              <div>
+                <label for="stock-nuevo">Stock inicial</label>
+                <input type="number" id="stock-nuevo" placeholder="0" min="0" step="any">
+              </div>
+            </div>
+            <button type="submit">Agregar al puesto</button>
+          </form>
+          <div class="aviso" id="aviso-alta"></div>
+        </div>
+
+        <div class="seccion venta">
+          <h2>Registrar una venta</h2>
+          <form id="form-venta">
+            <div>
+              <label for="producto-venta">Producto</label>
+              <select id="producto-venta" required></select>
+            </div>
+            <div class="fila-campos">
+              <div>
+                <label for="cantidad-venta">Cantidad</label>
+                <input type="number" id="cantidad-venta" placeholder="0" min="0" step="any" required>
+              </div>
+              <div>
+                <label>Total estimado</label>
+                <input type="text" id="total-venta" value="—" disabled>
+              </div>
+            </div>
+            <button type="submit">Cobrar venta</button>
+          </form>
+          <div class="aviso" id="aviso-venta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const BASE_URL = '/api/productos';
+
+  const estadoEl        = document.getElementById('estado');
+  const listaEl         = document.getElementById('lista-productos');
+  const avisoAlta       = document.getElementById('aviso-alta');
+  const avisoVenta      = document.getElementById('aviso-venta');
+  const totalItems      = document.getElementById('total-items');
+  const promedioEl      = document.getElementById('promedio');
+  const stockTotalEl    = document.getElementById('stock-total');
+  const stockBajoEl     = document.getElementById('stock-bajo-count');
+  const buscadorEl      = document.getElementById('buscador');
+  const selectProductoVenta = document.getElementById('producto-venta');
+  const cantidadVentaEl = document.getElementById('cantidad-venta');
+  const totalVentaEl    = document.getElementById('total-venta');
+
+  let categoriaActiva = '';
+  let buscarTimeout = null;
+
+  const fmt = (n) => new Intl.NumberFormat('es-CO', { style:'currency', currency:'COP', maximumFractionDigits:0 }).format(n);
+
+  function marcarEstado(ok, texto){
+    estadoEl.dataset.ok = ok;
+    estadoEl.textContent = texto;
+  }
+
+  function construirUrl(){
+    const params = new URLSearchParams();
+    if(categoriaActiva) params.set('categoria', categoriaActiva);
+    if(buscadorEl.value.trim()) params.set('nombre', buscadorEl.value.trim());
+    const qs = params.toString();
+    return qs ? `${BASE_URL}?${qs}` : BASE_URL;
+  }
+
+  async function cargarProductos(){
+    try{
+      const res = await fetch(construirUrl());
+      if(!res.ok) throw new Error('respuesta no válida');
+      const productos = await res.json();
+      marcarEstado(true, 'puesto abierto');
+      renderLista(productos);
+      renderTotales(productos);
+      renderSelectVenta(productos);
+    }catch(err){
+      marcarEstado(false, 'sin conexión con la API');
+      listaEl.innerHTML = `<div class="vacio">No fue posible cargar el puesto.</div>`;
+    }
+  }
+
+  function renderTotales(productos){
+    totalItems.textContent = productos.length;
+    const precios = productos.map(p => Number(p.precio) || 0);
+    const promedio = precios.length ? precios.reduce((a,b) => a+b, 0) / precios.length : 0;
+    promedioEl.textContent = productos.length ? fmt(promedio) : '—';
+    stockTotalEl.textContent = productos.reduce((a,p) => a + (Number(p.cantidad_disponible) || 0), 0);
+    stockBajoEl.textContent = productos.filter(p => p.stock_bajo).length;
+  }
+
+  function renderSelectVenta(productos){
+    const seleccionActual = selectProductoVenta.value;
+    selectProductoVenta.innerHTML = productos.map(p =>
+      `<option value="${p.id}" data-precio="${p.precio}">${p.nombre} (${fmt(p.precio)}/${p.unidad})</option>`
+    ).join('');
+    if(seleccionActual && productos.some(p => String(p.id) === seleccionActual)){
+      selectProductoVenta.value = seleccionActual;
+    }
+    actualizarTotalVenta();
+  }
+
+  function actualizarTotalVenta(){
+    const opcion = selectProductoVenta.selectedOptions[0];
+    const cantidad = parseFloat(cantidadVentaEl.value) || 0;
+    if(!opcion){ totalVentaEl.value = '—'; return; }
+    const precio = parseFloat(opcion.dataset.precio) || 0;
+    totalVentaEl.value = fmt(precio * cantidad);
+  }
+
+  function renderLista(productos){
+    if(!productos.length){
+      listaEl.innerHTML = `<div class="vacio">No hay productos que coincidan con el filtro.</div>`;
+      return;
+    }
+
+    listaEl.innerHTML = '';
+    productos.forEach(p => {
+      const fila = document.createElement('div');
+      fila.className = 'fila';
+      fila.innerHTML = `
+        <input class="nombre" type="text" value="${escapeHtml(p.nombre ?? '')}">
+        <input class="precio" type="number" step="any" value="${p.precio ?? 0}">
+        <select class="select-chico unidad-select">
+          ${['kg','libra','unidad','atado'].map(u =>
+            `<option value="${u}" ${p.unidad === u ? 'selected' : ''}>${u}</option>`
+          ).join('')}
+        </select>
+        <select class="select-chico categoria-select">
+          ${['fruta','verdura','tuberculo','hierba','otro'].map(c =>
+            `<option value="${c}" ${p.categoria === c ? 'selected' : ''}>${c}</option>`
+          ).join('')}
+        </select>
+        <input class="stock ${p.stock_bajo ? 'bajo' : ''}" type="number" step="any" value="${p.cantidad_disponible ?? 0}">
+        <div class="acciones">
+          <button class="guardar">Guardar</button>
+          <button class="eliminar">Quitar</button>
+        </div>
+      `;
+
+      fila.querySelector('.guardar').addEventListener('click', () => guardarProducto(p.id, fila));
+      fila.querySelector('.eliminar').addEventListener('click', () => eliminarProducto(p.id));
+
+      listaEl.appendChild(fila);
+    });
+  }
+
+  async function guardarProducto(id, fila){
+    const nombre = fila.querySelector('.nombre').value.trim();
+    const precio = parseFloat(fila.querySelector('.precio').value);
+    const unidad = fila.querySelector('.unidad-select').value;
+    const categoria = fila.querySelector('.categoria-select').value;
+    const cantidad_disponible = parseFloat(fila.querySelector('.stock').value);
+
+    try{
+      const res = await fetch(`${BASE_URL}/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, precio, unidad, categoria, cantidad_disponible })
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || 'no se pudo guardar');
+      await cargarProductos();
+    }catch(err){
+      marcarEstado(false, err.message);
+    }
+  }
+
+  async function eliminarProducto(id){
+    if(!confirm(`¿Quitar el producto #${id} del puesto?`)) return;
+    try{
+      const res = await fetch(`${BASE_URL}/${id}`, { method: 'DELETE' });
+      if(!res.ok) throw new Error('no se pudo eliminar');
+      await cargarProductos();
+    }catch(err){
+      marcarEstado(false, `error al quitar #${id}`);
+    }
+  }
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('activo'));
+      chip.classList.add('activo');
+      categoriaActiva = chip.dataset.categoria;
+      cargarProductos();
+    });
+  });
+
+  buscadorEl.addEventListener('input', () => {
+    clearTimeout(buscarTimeout);
+    buscarTimeout = setTimeout(cargarProductos, 300);
+  });
+
+  document.getElementById('form-alta').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nombre = document.getElementById('nombre-nuevo').value.trim();
+    const precio = parseFloat(document.getElementById('precio-nuevo').value) || 0;
+    const unidad = document.getElementById('unidad-nueva').value;
+    const categoria = document.getElementById('categoria-nueva').value;
+    const cantidad_disponible = parseFloat(document.getElementById('stock-nuevo').value) || 0;
+
+    avisoAlta.textContent = '';
+    avisoAlta.className = 'aviso';
+
+    if(!nombre){
+      avisoAlta.textContent = 'El producto necesita un nombre.';
+      avisoAlta.className = 'aviso error';
+      return;
+    }
+
+    try{
+      const res = await fetch(BASE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, precio, unidad, categoria, cantidad_disponible })
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || 'no se pudo crear');
+      document.getElementById('form-alta').reset();
+      avisoAlta.textContent = `"${data.nombre}" agregado al puesto.`;
+      avisoAlta.className = 'aviso ok';
+      await cargarProductos();
+    }catch(err){
+      avisoAlta.textContent = err.message;
+      avisoAlta.className = 'aviso error';
+    }
+  });
+
+  selectProductoVenta.addEventListener('change', actualizarTotalVenta);
+  cantidadVentaEl.addEventListener('input', actualizarTotalVenta);
+
+  document.getElementById('form-venta').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = selectProductoVenta.value;
+    const cantidad = parseFloat(cantidadVentaEl.value);
+
+    avisoVenta.textContent = '';
+    avisoVenta.className = 'aviso';
+
+    if(!id || !cantidad || cantidad <= 0){
+      avisoVenta.textContent = 'Elige un producto y una cantidad válida.';
+      avisoVenta.className = 'aviso error';
+      return;
+    }
+
+    try{
+      const res = await fetch(`${BASE_URL}/${id}/vender`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cantidad })
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || 'no se pudo registrar la venta');
+
+      avisoVenta.textContent = `Vendido: ${data.vendido} — total ${fmt(data.total)}.`;
+      avisoVenta.className = 'aviso ok';
+      document.getElementById('form-venta').reset();
+      totalVentaEl.value = '—';
+      await cargarProductos();
+    }catch(err){
+      avisoVenta.textContent = err.message;
+      avisoVenta.className = 'aviso error';
+    }
+  });
+
+  function escapeHtml(str){
+    return String(str)
+      .replaceAll('&','&amp;').replaceAll('<','&lt;')
+      .replaceAll('>','&gt;').replaceAll('"','&quot;');
+  }
+
+  cargarProductos();
+</script>
+
+</body>
+</html>
