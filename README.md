@@ -180,6 +180,7 @@ Capturas de cada endpoint probado en Postman (ver el detalle de cada una en la s
 | Actualizar producto | `evidencia/05-actualizar-producto.png` |
 | Eliminar producto | `evidencia/06-eliminar-producto.png` |
 
+Ejecucion En VisualStudio
 <img width="1919" height="1151" alt="image" src="https://github.com/user-attachments/assets/19302b54-44f6-485b-be80-a8e74a282be1" />
 
 ## Autor
